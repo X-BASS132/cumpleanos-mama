@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>¡Feliz Cumpleaños, Mamá! 💖</title>
+    
+    <!-- External Dependencies via CDN with fallback handling -->
+    <!-- GSAP for smooth UI orchestration -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- Three.js for 3D Birthday Cake -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Canvas Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts for elegant typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for touch controls -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Modern CSS Reset & Safe Area Vars for Mobile Devices */
+        :root {
+            --gold-gradient: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%);
+            --gold-shine: linear-gradient(45deg, rgba(255,215,0,0.8) 0%, rgba(255,255,255,0.9) 50%, rgba(255,215,0,0.8) 100%);
+            --pink-accent: #FF2E93;
+            --purple-deep: #2A0934;
+            --purple-violet: #4A154B;
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --text-glow: 0 0 15px rgba(255, 215, 0, 0.4);
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            background-color: var(--purple-deep);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #FFFFFF;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #5c185a 0%, #2A0934 70%, #15031b 100%);
+            padding: var(--sat) var(--sar) var(--sab) var(--sal);
+            position: relative;
+        }
+
+        /* Ambient floating SVG elements */
+        .ambient-bg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .floating-heart, .floating-sparkle {
+            position: absolute;
+            opacity: 0.6;
+            animation: floatUp 12s infinite linear;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(105h) scale(0.8) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.7; }
+            90% { opacity: 0.7; }
+            100% { transform: translateY(-10vh) scale(1.2) rotate(360deg); opacity: 0; }
+        }
+
+        /* Container limits for mobile first viewport */
+        .card-app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            max-height: 920px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2;
+            padding: 16px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+        .card-app-container::-webkit-scrollbar { display: none; }
+
+        /* Audio & Action Top Bar */
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            padding: 4px 8px;
+            opacity: 0; /* Fade in when envelope opens */
+            transition: opacity 0.8s ease;
+        }
+
+        .btn-icon {
+            min-width: 44px;
+            min-height: 44px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:active {
+            transform: scale(0.92);
+            background: rgba(255, 46, 147, 0.3);
+        }
+
+        .volume-popover {
+            position: absolute;
+            top: 55px;
+            right: 16px;
+            background: rgba(42, 9, 52, 0.95);
+            border: 1px solid var(--gold-gradient);
+            border-radius: 20px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 30;
+        }
+
+        .volume-popover.active { display: flex; }
+        .volume-popover input[type="range"] {
+            accent-color: #FF2E93;
+            width: 100px;
+        }
+
+        /* Stage 1: Envelope Component */
+        .envelope-wrapper {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            padding: 20px;
+            background: radial-gradient(circle at center, rgba(92, 24, 90, 0.95) 0%, rgba(42, 9, 52, 0.98) 100%);
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+
+        .envelope-card {
+            width: 290px;
+            height: 200px;
+            background: #4a1240;
+            position: relative;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(212, 175, 55, 0.3);
+            border: 1.5px solid rgba(212, 175, 55, 0.6);
+            cursor: pointer;
+            perspective: 1000px;
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 145px solid transparent;
+            border-right: 145px solid transparent;
+            border-top: 110px solid #6b1b5c;
+            transform-origin: top;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 4;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        .envelope-flap::after {
+            content: '';
+            position: absolute;
+            top: -110px;
+            left: -145px;
+            width: 290px;
+            height: 110px;
+            background: linear-gradient(180deg, rgba(212, 175, 55, 0.4) 0%, transparent 100%);
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        .envelope-pocket {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 145px solid #3c0d34;
+            border-right: 145px solid #3c0d34;
+            border-bottom: 110px solid #521546;
+            border-radius: 0 0 12px 12px;
+            z-index: 3;
+        }
+
+        .envelope-seal {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 54px;
+            height: 54px;
+            background: var(--gold-gradient);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.6rem;
+            z-index: 5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 15px rgba(255, 215, 0, 0.6);
+            transition: transform 0.3s ease;
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+            50% { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 25px rgba(255, 215, 0, 0.9); }
+        }
+
+        .envelope-teaser {
+            margin-top: 35px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 2rem;
+            color: #FCF6BA;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 10px rgba(212, 175, 55, 0.5);
+            letter-spacing: 1px;
+            padding: 0 15px;
+        }
+
+        .envelope-hint {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Main Card Content (Revealed after opening) */
+        .card-content {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s ease 0.4s;
+            z-index: 10;
+        }
+
+        .header-title {
+            text-align: center;
+            width: 100%;
+        }
+
+        .main-greeting {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2.4rem, 8vw, 3.4rem);
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: var(--text-glow);
+            line-height: 1.2;
+            padding: 0 5px;
+            word-break: break-word;
+        }
+
+        .sub-greeting {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.85);
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* 3D Cake Canvas Container */
+        .cake-container {
+            width: 100%;
+            height: 240px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2px 0;
+        }
+
+        #cakeCanvas {
+            width: 100% !important;
+            height: 100% !important;
+            outline: none;
+        }
+
+        /* CSS Fallback Cake (If WebGL is unavailable) */
+        .cake-fallback {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 180px;
+            height: 180px;
+            position: relative;
+        }
+
+        .fallback-tier {
+            background: linear-gradient(90deg, #ff69b4, #ff1493, #ff69b4);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 2px solid #FCF6BA;
+        }
+        .tier-bottom { width: 140px; height: 50px; }
+        .tier-top { width: 100px; height: 40px; margin-bottom: -5px; }
+        .fallback-candle {
+            width: 10px;
+            height: 35px;
+            background: linear-gradient(to right, #FFF, #ffd700, #FFF);
+            border-radius: 4px;
+            position: relative;
+        }
+        .fallback-flame {
+            width: 12px;
+            height: 18px;
+            background: orange;
+            border-radius: 50% 50% 20% 20%;
+            position: absolute;
+            top: -18px;
+            left: -1px;
+            box-shadow: 0 0 10px yellow;
+            animation: flameFlicker 0.4s infinite alternate;
+        }
+        @keyframes flameFlicker {
+            from { transform: scale(0.9) rotate(-2deg); }
+            to { transform: scale(1.1) rotate(2deg); }
+        }
+
+        /* Dedicated Letter Card */
+        .dedication-card {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 18px 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .dedication-card::before {
+            content: '“';
+            position: absolute;
+            top: 5px;
+            left: 15px;
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: rgba(255, 215, 0, 0.3);
+            line-height: 1;
+        }
+
+        .dedication-text {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #FFF;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+            white-space: pre-line;
+            word-wrap: break-word;
+        }
+
+        .dedication-signature {
+            margin-top: 12px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 1.5rem;
+            color: #FCF6BA;
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        /* Interactive Action Buttons Grid */
+        .action-buttons-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 6px;
+            margin-bottom: 12px;
+            z-index: 15;
+        }
+
+        .btn-action {
+            min-height: 46px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            background: linear-gradient(135deg, rgba(255, 46, 147, 0.4) 0%, rgba(74, 21, 75, 0.6) 100%);
+            color: #FFFFFF;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.25s ease;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .btn-action:active {
+            transform: translateY(2px) scale(0.97);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border-color: #FF2E93;
+        }
+
+        .btn-action-full {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.4) 0%, rgba(170, 119, 28, 0.6) 100%);
+            border-color: rgba(252, 246, 186, 0.6);
+        }
+
+        /* Toast Popup Notification */
+        .toast-notification {
+            position: fixed;
+            bottom: calc(20px + var(--sab));
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(42, 9, 52, 0.95);
+            border: 1px solid var(--gold-gradient);
+            padding: 12px 24px;
+            border-radius: 30px;
+            color: #FCF6BA;
+            font-size: 0.95rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(255, 215, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+            pointer-events: none;
+            width: 88%;
+            max-width: 380px;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Customization Drawer / Modal Panel */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 3, 20, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-panel {
+            width: 100%;
+            max-width: 480px;
+            max-height: 85vh;
+            background: linear-gradient(180deg, #3c0d34 0%, #1a0421 100%);
+            border-radius: 24px 24px 0 0;
+            border-top: 1.5px solid var(--gold-gradient);
+            padding: 20px 20px calc(20px + var(--sab)) 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-panel {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: #FCF6BA;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+
+        .input-control {
+            width: 100%;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #FFF;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-control:focus {
+            border-color: #FF2E93;
+            background: rgba(255,255,255,0.12);
+        }
+
+        textarea.input-control {
+            resize: none;
+            min-height: 80px;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-modal-primary {
+            width: 100%;
+            min-height: 46px;
+            background: var(--gold-gradient);
+            border: none;
+            border-radius: 12px;
+            color: #2A0934;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-modal-secondary {
+            width: 100%;
+            min-height: 44px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: #FFF;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Reduced Motion accessibility rules */
+        @media (prefers-reduced-motion: reduce) {
+            .floating-heart, .floating-sparkle, .envelope-seal, .fallback-flame {
+                animation: none !important;
+            }
+            .card-content, .envelope-flap, .modal-panel {
+                transition: opacity 0.1s ease !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Animated Floating Elements -->
+    <div class="ambient-bg" id="ambientBg"></div>
+
+    <!-- Main Mobile Frame Container -->
+    <div class="card-app-container">
+        
+        <!-- Top Toolbar Control -->
+        <header class="top-bar" id="topBar">
+            <button class="btn-icon" id="btnCustomize" aria-label="Personalizar tarjeta" title="Personalizar">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+
+            <div style="display: flex; gap: 8px; position: relative;">
+                <button class="btn-icon" id="btnVolumeToggle" aria-label="Control de Audio" title="Música">
+                    <i class="fa-solid fa-music" id="musicIcon"></i>
+                </button>
+                <div class="volume-popover" id="volumePopover">
+                    <i class="fa-solid fa-volume-low" style="font-size: 0.8rem;"></i>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.5">
+                    <i class="fa-solid fa-volume-high" style="font-size: 0.8rem;"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Revealing Card View -->
+        <main class="card-content" id="mainCardContent">
+            
+            <div class="header-title">
+                <h1 class="main-greeting" id="displayTitle">¡Feliz cumpleaños, mamá!</h1>
+                <p class="sub-greeting">✦ Hoy celebramos tu vida y tu amor ✦</p>
+            </div>
+
+            <!-- 3D Interactive Cake Container -->
+            <div class="cake-container" id="cakeContainer">
+                <canvas id="cakeCanvas"></canvas>
+                
+                <!-- Fallback CSS Cake if WebGL fails -->
+                <div class="cake-fallback" id="cakeFallback">
+                    <div class="fallback-candle">
+                        <div class="fallback-flame" id="fallbackFlame"></div>
+                    </div>
+                    <div class="fallback-tier tier-top"></div>
+                    <div class="fallback-tier tier-bottom"></div>
+                </div>
+            </div>
+
+            <!-- Letter / Dedication Card -->
+            <article class="dedication-card">
+                <p class="dedication-text" id="displayDedication">
+                    Gracias por tu amor infinito, por cada abrazo y por iluminar nuestras vidas. Hoy celebramos a la mamá más maravillosa del mundo. ¡Te queremos muchísimo!
+                </p>
+                <div class="dedication-signature" id="displaySignature">Con todo nuestro amor</div>
+            </article>
+
+            <!-- Interactive Action Buttons -->
+            <div class="action-buttons-grid">
+                <button class="btn-action" id="btnBlowCandles">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span id="blowText">Apagar Velas</span>
+                </button>
+                <button class="btn-action" id="btnSendHug">
+                    <i class="fa-solid fa-heart"></i>
+                    <span>Mandar Abrazo</span>
+                </button>
+                <button class="btn-action btn-action-full" id="btnCelebrate">
+                    <i class="fa-solid fa-champagne-glasses"></i>
+                    <span>¡A Celebrar! 🎉</span>
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Stage 1: Initial Envelope Overlay -->
+    <div class="envelope-wrapper" id="envelopeWrapper">
+        <div class="envelope-card" id="envelopeCard">
+            <div class="envelope-flap" id="envelopeFlap"></div>
+            <div class="envelope-seal" id="envelopeSeal">💖</div>
+            <div class="envelope-pocket"></div>
+        </div>
+        <h2 class="envelope-teaser">Mamá, tienes una sorpresa</h2>
+        <p class="envelope-hint">Toca la carta para abrir ✉️</p>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-notification" id="toastNotification">
+        <i class="fa-solid fa-star" style="color: #FFD700;"></i>
+        <span id="toastMessage">¡Que todos tus deseos se hagan realidad!</span>
+    </div>
+
+    <!-- Personalization Modal Panel -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 class="modal-title">✏️ Personalizar Tarjeta</h3>
+                <button class="btn-icon" id="btnCloseModal" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label for="inputMomName">Nombre de Mamá (Opcional):</label>
+                <input type="text" id="inputMomName" class="input-control" placeholder="Ej: María / Elena">
+            </div>
+
+            <div class="input-group">
+                <label for="inputDedication">Mensaje / Dedicatoria:</label>
+                <textarea id="inputDedication" class="input-control" rows="4"></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="inputSignature">Firma (Opcional):</label>
+                <input type="text" id="inputSignature" class="input-control" placeholder="Ej: Con amor, tus hijos">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal-primary" id="btnSaveCustomization">
+                    <i class="fa-solid fa-check"></i> Guardar y ver tarjeta
+                </button>
+                <button class="btn-modal-secondary" id="btnDownloadCard">
+                    <i class="fa-solid fa-download"></i> Descargar tarjeta personalizada
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic & Sound Engine -->
+    <script>
+        /**
+         * State & Global Configuration
+         */
+        const DEFAULT_STATE = {
+            momName: '',
+            dedication: 'Gracias por tu amor infinito, por cada abrazo y por iluminar nuestras vidas. Hoy celebramos a la mamá más maravillosa del mundo. ¡Te queremos muchísimo!',
+            signature: 'Con amor, tu familia'
+        };
+
+        let currentState = { ...DEFAULT_STATE };
+        let candlesLit = true;
+        let isMuted = false;
+        let audioVolume = 0.5;
+        let audioCtx = null;
+        let melodyInterval = null;
+        let currentNoteIndex = 0;
+        let threeScene, threeCamera, threeRenderer, cakeGroup, flameLights = [], flameMeshes = [], smokeParticles = [];
+        let animationFrameId = null;
+
+        /* Happy Birthday Melodic Frequencies (Web Audio API Synthesizer) */
+        const HAPPY_BIRTHDAY_NOTES = [
+            { note: 'C4', duration: 0.35 }, { note: 'C4', duration: 0.25 },
+            { note: 'D4', duration: 0.6 },  { note: 'C4', duration: 0.6 },
+            { note: 'F4', duration: 0.6 },  { note: 'E4', duration: 1.0 },
+            
+            { note: 'C4', duration: 0.35 }, { note: 'C4', duration: 0.25 },
+            { note: 'D4', duration: 0.6 },  { note: 'C4', duration: 0.6 },
+            { note: 'G4', duration: 0.6 },  { note: 'F4', duration: 1.0 },
+            
+            { note: 'C4', duration: 0.35 }, { note: 'C4', duration: 0.25 },
+            { note: 'C5', duration: 0.6 },  { note: 'A4', duration: 0.6 },
+            { note: 'F4', duration: 0.6 },  { note: 'E4', duration: 0.6 },
+            { note: 'D4', duration: 0.8 },
+            
+            { note: 'A4#', duration: 0.35 },{ note: 'A4#', duration: 0.25 },
+            { note: 'A4', duration: 0.6 },  { note: 'F4', duration: 0.6 },
+            { note: 'G4', duration: 0.6 },  { note: 'F4', duration: 1.2 }
+        ];
+
+        const NOTE_FREQUENCIES = {
+            'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23,
+            'G4': 392.00, 'A4': 440.00, 'A4#': 466.16, 'B4': 493.88, 'C5': 523.25
+        };
+
+        // DOM Element Cache
+        const envelopeWrapper = document.getElementById('envelopeWrapper');
+        const envelopeCard = document.getElementById('envelopeCard');
+        const envelopeFlap = document.getElementById('envelopeFlap');
+        const envelopeSeal = document.getElementById('envelopeSeal');
+        const mainCardContent = document.getElementById('mainCardContent');
+        const topBar = document.getElementById('topBar');
+        
+        const displayTitle = document.getElementById('displayTitle');
+        const displayDedication = document.getElementById('displayDedication');
+        const displaySignature = document.getElementById('displaySignature');
+
+        const btnCustomize = document.getElementById('btnCustomize');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const btnCloseModal = document.getElementById('btnCloseModal');
+        const btnSaveCustomization = document.getElementById('btnSaveCustomization');
+        const btnDownloadCard = document.getElementById('btnDownloadCard');
+
+        const inputMomName = document.getElementById('inputMomName');
+        const inputDedication = document.getElementById('inputDedication');
+        const inputSignature = document.getElementById('inputSignature');
+
+        const btnBlowCandles = document.getElementById('btnBlowCandles');
+        const blowText = document.getElementById('blowText');
+        const btnSendHug = document.getElementById('btnSendHug');
+        const btnCelebrate = document.getElementById('btnCelebrate');
+        const toastNotification = document.getElementById('toastNotification');
+        const toastMessage = document.getElementById('toastMessage');
+
+        const btnVolumeToggle = document.getElementById('btnVolumeToggle');
+        const musicIcon = document.getElementById('musicIcon');
+        const volumePopover = document.getElementById('volumePopover');
+        const volumeSlider = document.getElementById('volumeSlider');
+
+        /**
+         * App Initialization
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedData();
+            createAmbientBackground();
+            initThreeJSCake();
+            setupEventListeners();
+        });
+
+        /* Load from localStorage if present */
+        function loadSavedData() {
+            try {
+                const saved = localStorage.getItem('mom_birthday_card_data');
+                if (saved) {
+                    currentState = { ...DEFAULT_STATE, ...JSON.parse(saved) };
+                }
+            } catch (e) {
+                console.warn('Storage fallback activated', e);
+            }
+            updateDOMWithState();
+        }
+
+        /* Sync state values to display elements */
+        function updateDOMWithState() {
+            const name = currentState.momName.trim();
+            displayTitle.textContent = name ? `¡Feliz cumpleaños, mamá ${name}!` : '¡Feliz cumpleaños, mamá!';
+            displayDedication.textContent = currentState.dedication;
+            displaySignature.textContent = currentState.signature;
+
+            // Update inputs
+            inputMomName.value = currentState.momName;
+            inputDedication.value = currentState.dedication;
+            inputSignature.value = currentState.signature;
+        }
+
+        /* Save to localStorage */
+        function saveState() {
+            currentState.momName = inputMomName.value.trim();
+            currentState.dedication = inputDedication.value.trim() || DEFAULT_STATE.dedication;
+            currentState.signature = inputSignature.value.trim();
+
+            try {
+                localStorage.setItem('mom_birthday_card_data', JSON.stringify(currentState));
+            } catch (e) {}
+            
+            updateDOMWithState();
+        }
+
+        /**
+         * Ambient Background Particle System (Hearts & Sparkles)
+         */
+        function createAmbientBackground() {
+            const container = document.getElementById('ambientBg');
+            const items = ['💖', '✨', '🌸', '⭐', '💕'];
+            
+            for (let i = 0; i < 18; i++) {
+                const el = document.createElement('div');
+                el.className = 'floating-sparkle';
+                el.textContent = items[Math.floor(Math.random() * items.length)];
+                el.style.left = `${Math.random() * 100}%`;
+                el.style.animationDuration = `${8 + Math.random() * 10}s`;
+                el.style.animationDelay = `${Math.random() * 5}s`;
+                el.style.fontSize = `${0.9 + Math.random() * 1.2}rem`;
+                container.appendChild(el);
+            }
+        }
+
+        /**
+         * Web Audio Synthesizer Engine
+         */
+        function initAudioEngine() {
+            if (!audioCtx) {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtxClass) {
+                    audioCtx = new AudioCtxClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playNote(freq, duration) {
+            if (!audioCtx || isMuted || freq === 0) return;
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle'; // Warm, soft synthesizer tone
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                // Smooth attack and release envelope
+                const now = audioCtx.currentTime;
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3 * audioVolume, now + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + duration);
+            } catch(e) {}
+        }
+
+        function startMelodyLoop() {
+            initAudioEngine();
+            if (melodyInterval) clearInterval(melodyInterval);
+
+            currentNoteIndex = 0;
+            const playNext = () => {
+                if (isMuted) return;
+                const noteData = HAPPY_BIRTHDAY_NOTES[currentNoteIndex];
+                const freq = NOTE_FREQUENCIES[noteData.note] || 0;
+                playNote(freq, noteData.duration);
+                
+                currentNoteIndex = (currentNoteIndex + 1) % HAPPY_BIRTHDAY_NOTES.length;
+            };
+
+            playNext();
+            melodyInterval = setInterval(playNext, 650);
+        }
+
+        /**
+         * 3D Birthday Cake Graphics Engine (Three.js)
+         */
+        function initThreeJSCake() {
+            const canvas = document.getElementById('cakeCanvas');
+            const container = document.getElementById('cakeContainer');
+
+            if (!window.THREE) {
+                // Fallback to CSS cake
+                canvas.style.display = 'none';
+                document.getElementById('cakeFallback').style.display = 'flex';
+                return;
+            }
+
+            // Scene setup
+            threeScene = new THREE.Scene();
+            
+            // Camera
+            threeCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            threeCamera.position.set(0, 3.5, 6.5);
+            threeCamera.lookAt(0, 0.5, 0);
+
+            // Renderer with performance limiters
+            threeRenderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            threeRenderer.setSize(container.clientWidth, container.clientHeight);
+            threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            threeRenderer.shadowMap.enabled = true;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            threeScene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffd700, 0.8);
+            dirLight.position.set(5, 8, 5);
+            threeScene.add(dirLight);
+
+            cakeGroup = new THREE.Group();
+
+            // Materials
+            const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.8 });
+            const pinkMat = new THREE.MeshStandardMaterial({ color: 0xff2e93, roughness: 0.4 });
+            const creamMat = new THREE.MeshStandardMaterial({ color: 0xfff8dc, roughness: 0.3 });
+            const candleMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+
+            // Base Stand
+            const plateGeo = new THREE.CylinderGeometry(2.2, 2.0, 0.15, 32);
+            const plateMesh = new THREE.Mesh(plateGeo, goldMat);
+            plateMesh.position.y = 0;
+            cakeGroup.add(plateMesh);
+
+            // Cake Bottom Tier
+            const tier1Geo = new THREE.CylinderGeometry(1.7, 1.7, 0.9, 32);
+            const tier1Mesh = new THREE.Mesh(tier1Geo, pinkMat);
+            tier1Mesh.position.y = 0.5;
+            cakeGroup.add(tier1Mesh);
+
+            // Cake Top Tier
+            const tier2Geo = new THREE.CylinderGeometry(1.2, 1.2, 0.8, 32);
+            const tier2Mesh = new THREE.Mesh(tier2Geo, creamMat);
+            tier2Mesh.position.y = 1.35;
+            cakeGroup.add(tier2Mesh);
+
+            // Decorative Pearls
+            for (let i = 0; i < 16; i++) {
+                const angle = (i / 16) * Math.PI * 2;
+                const pearlGeo = new THREE.SphereGeometry(0.08, 16, 16);
+                const pearl = new THREE.Mesh(pearlGeo, goldMat);
+                pearl.position.set(Math.cos(angle) * 1.22, 0.98, Math.sin(angle) * 1.22);
+                cakeGroup.add(pearl);
+            }
+
+            // Candles and Flames (3 Candles)
+            const candlePositions = [
+                { x: 0, z: 0 },
+                { x: -0.45, z: 0.3 },
+                { x: 0.45, z: 0.3 }
+            ];
+
+            flameLights = [];
+            flameMeshes = [];
+
+            candlePositions.forEach(pos => {
+                // Candle Stick
+                const candleGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.5, 16);
+                const candle = new THREE.Mesh(candleGeo, candleMat);
+                candle.position.set(pos.x, 1.95, pos.z);
+                cakeGroup.add(candle);
+
+                // Candle Flame
+                const flameGeo = new THREE.ConeGeometry(0.07, 0.18, 16);
+                const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+                const flame = new THREE.Mesh(flameGeo, flameMat);
+                flame.position.set(pos.x, 2.28, pos.z);
+                cakeGroup.add(flame);
+                flameMeshes.push(flame);
+
+                // Flame Light Glow
+                const flameLight = new THREE.PointLight(0xff7700, 1.2, 2.5);
+                flameLight.position.set(pos.x, 2.3, pos.z);
+                cakeGroup.add(flameLight);
+                flameLights.push(flameLight);
+            });
+
+            threeScene.add(cakeGroup);
+
+            // Interactive Touch Rotation Control
+            let isDragging = false;
+            let previousTouchX = 0;
+
+            const handleStart = (x) => {
+                isDragging = true;
+                previousTouchX = x;
+            };
+            const handleMove = (x) => {
+                if (!isDragging) return;
+                const delta = x - previousTouchX;
+                cakeGroup.rotation.y += delta * 0.01;
+                previousTouchX = x;
+            };
+            const handleEnd = () => { isDragging = false; };
+
+            canvas.addEventListener('mousedown', (e) => handleStart(e.clientX));
+            window.addEventListener('mousemove', (e) => handleMove(e.clientX));
+            window.addEventListener('mouseup', handleEnd);
+
+            canvas.addEventListener('touchstart', (e) => handleStart(e.touches[0].clientX), { passive: true });
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) handleMove(e.touches[0].clientX);
+            }, { passive: true });
+            window.addEventListener('touchend', handleEnd);
+
+            // Start Render Loop
+            animateThreeJS();
+        }
+
+        /* ThreeJS Render Animation Loop */
+        function animateThreeJS() {
+            if (document.hidden) return; // Pause when tab hidden
+
+            animationFrameId = requestAnimationFrame(animateThreeJS);
+
+            if (cakeGroup) {
+                cakeGroup.rotation.y += 0.005; // Gentle auto-rotate
+            }
+
+            // Flame flickering effect
+            if (candlesLit && flameMeshes.length > 0) {
+                flameMeshes.forEach((flame, idx) => {
+                    const scale = 0.9 + Math.sin(Date.now() * 0.01 + idx) * 0.15;
+                    flame.scale.set(scale, scale, scale);
+                    flameLights[idx].intensity = 1.0 + Math.sin(Date.now() * 0.015 + idx) * 0.3;
+                });
+            }
+
+            threeRenderer.render(threeScene, threeCamera);
+        }
+
+        // Toggle Candles State
+        function setCandlesState(lit) {
+            candlesLit = lit;
+
+            if (flameMeshes.length > 0) {
+                flameMeshes.forEach(f => f.visible = lit);
+                flameLights.forEach(l => l.visible = lit);
+            }
+
+            // Fallback flame toggle
+            const fallbackFlame = document.getElementById('fallbackFlame');
+            if (fallbackFlame) fallbackFlame.style.display = lit ? 'block' : 'none';
+
+            if (!lit) {
+                showToast("✨ ¡Que todos tus deseos se hagan realidad, mamá! ✨");
+                blowText.textContent = "Volver a Encender";
+                // Trigger subtle particle burst
+                if (window.confetti) {
+                    confetti({ particleCount: 35, spread: 60, origin: { y: 0.6 } });
+                }
+            } else {
+                blowText.textContent = "Apagar Velas";
+            }
+        }
+
+        /**
+         * Envelope Opening Sequence Orchestration (GSAP)
+         */
+        function openEnvelopeSequence() {
+            // Audio Initialization on initial gesture
+            startMelodyLoop();
+
+            if (window.gsap) {
+                const tl = gsap.timeline();
+                
+                tl.to(envelopeSeal, { scale: 0, duration: 0.3, ease: 'back.in(2)' })
+                  .to(envelopeFlap, { rotateX: 180, duration: 0.6, ease: 'power2.inOut' }, "-=0.1")
+                  .to(envelopeWrapper, { opacity: 0, duration: 0.8, onComplete: () => {
+                      envelopeWrapper.style.visibility = 'hidden';
+                  }})
+                  .to(topBar, { opacity: 1, duration: 0.5 }, "-=0.4")
+                  .to(mainCardContent, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, "-=0.3")
+                  .add(() => {
+                      // Trigger festive confetti upon opening
+                      triggerConfettiExplosion();
+                  });
+            } else {
+                // Fallback without GSAP
+                envelopeWrapper.style.opacity = '0';
+                setTimeout(() => {
+                    envelopeWrapper.style.visibility = 'hidden';
+                    mainCardContent.style.opacity = '1';
+                    mainCardContent.style.transform = 'translateY(0)';
+                    topBar.style.opacity = '1';
+                    triggerConfettiExplosion();
+                }, 500);
+            }
+        }
+
+        /**
+         * Confetti and Particle Celebrations
+         */
+        function triggerConfettiExplosion() {
+            if (!window.confetti) return;
+
+            const count = 200;
+            const defaults = { origin: { y: 0.7 } };
+
+            function fire(particleRatio, opts) {
+                confetti(Object.assign({}, defaults, opts, {
+                    particleCount: Math.floor(count * particleRatio)
+                }));
+            }
+
+            fire(0.25, { spread: 26, startVelocity: 55, colors: ['#D4AF37', '#FF2E93'] });
+            fire(0.2, { spread: 60, colors: ['#FFFFFF', '#FCF6BA'] });
+            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, colors: ['#FF2E93', '#D4AF37'] });
+        }
+
+        /* "Te mando un abrazo" Floating Hearts Animation */
+        function triggerHeartShower() {
+            showToast("💖 ¡Te mandamos un abrazo gigante y todo nuestro amor! 💖");
+            
+            for (let i = 0; i < 25; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.innerHTML = '💖';
+                    heart.style.position = 'fixed';
+                    heart.style.left = `${Math.random() * 90 + 5}%`;
+                    heart.style.bottom = '-20px';
+                    heart.style.fontSize = `${Math.random() * 1.5 + 1.2}rem`;
+                    heart.style.zIndex = '90';
+                    heart.style.pointerEvents = 'none';
+                    heart.style.transition = 'transform 3s cubic-bezier(0.25, 1, 0.5, 1), opacity 3s ease';
+                    document.body.appendChild(heart);
+
+                    requestAnimationFrame(() => {
+                        heart.style.transform = `translateY(-${window.innerHeight + 50}px) rotate(${Math.random() * 360}deg)`;
+                        heart.style.opacity = '0';
+                    });
+
+                    setTimeout(() => heart.remove(), 3200);
+                }, i * 80);
+            }
+        }
+
+        /* Notification Toast helper */
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toastNotification.classList.add('show');
+            setTimeout(() => {
+                toastNotification.classList.remove('show');
+            }, 3800);
+        }
+
+        /**
+         * Standalone HTML Exporter Generator (Blob download)
+         */
+        function exportStandaloneHTMLCard() {
+            saveState();
+            
+            // Clone current HTML document string
+            const docHTML = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            
+            const blob = new Blob([docHTML], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Tarjeta_Cumpleanos_Mama_${currentState.momName || 'Especial'}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast("📥 ¡Tarjeta descargada con éxito!");
+        }
+
+        /**
+         * Event Listeners Setup
+         */
+        function setupEventListeners() {
+            // Initial Envelope Open Gesture
+            envelopeCard.addEventListener('click', openEnvelopeSequence);
+
+            // Blow / Reignite Candles
+            btnBlowCandles.addEventListener('click', () => {
+                setCandlesState(!candlesLit);
+            });
+
+            // Send Hug Heart Burst
+            btnSendHug.addEventListener('click', triggerHeartShower);
+
+            // Celebrate Button
+            btnCelebrate.addEventListener('click', () => {
+                triggerConfettiExplosion();
+                showToast("🎉 ¡Que viva la reina de la casa! ¡Salud! 🥂");
+            });
+
+            // Modal Personalization Controls
+            btnCustomize.addEventListener('click', () => {
+                modalOverlay.classList.add('active');
+            });
+            btnCloseModal.addEventListener('click', () => {
+                modalOverlay.classList.remove('active');
+            });
+            btnSaveCustomization.addEventListener('click', () => {
+                saveState();
+                modalOverlay.classList.remove('active');
+                showToast("✨ Personalización guardada");
+            });
+            btnDownloadCard.addEventListener('click', exportStandaloneHTMLCard);
+
+            // Live customization preview on typing
+            inputMomName.addEventListener('input', saveState);
+            inputDedication.addEventListener('input', saveState);
+            inputSignature.addEventListener('input', saveState);
+
+            // Audio & Volume controls
+            btnVolumeToggle.addEventListener('click', () => {
+                volumePopover.classList.toggle('active');
+            });
+
+            volumeSlider.addEventListener('input', (e) => {
+                audioVolume = parseFloat(e.target.value);
+                isMuted = audioVolume === 0;
+                musicIcon.className = isMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-music';
+            });
+
+            // Close volume popover when tapping outside
+            document.addEventListener('click', (e) => {
+                if (!btnVolumeToggle.contains(e.target) && !volumePopover.contains(e.target)) {
+                    volumePopover.classList.remove('active');
+                }
+            });
+
+            // Window resize handler for Three.js canvas responsiveness
+            window.addEventListener('resize', () => {
+                if (threeCamera && threeRenderer) {
+                    const container = document.getElementById('cakeContainer');
+                    threeCamera.aspect = container.clientWidth / container.clientHeight;
+                    threeCamera.updateProjectionMatrix();
+                    threeRenderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            });
+
+            // Tab visibility change (battery saver optimization)
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                } else {
+                    animateThreeJS();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
